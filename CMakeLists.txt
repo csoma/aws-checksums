@@ -148,3 +148,22 @@ configure_file("cmake/${CMAKE_PROJECT_NAME}-config.cmake"
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_PROJECT_NAME}-config.cmake"
     DESTINATION "${LIBRARY_DIRECTORY}/${CMAKE_PROJECT_NAME}/cmake/")
 
+
+# Clang analyze
+
+add_custom_target(clang-static
+  clang --analyze -Xanalyzer -analyzer-output=html -Wall -Wextra -pedantic -Wno-error=unknown-pragmas -Werror -I${CMAKE_CURRENT_SOURCE_DIR}/include ${CHECKSUMS_SRC} ${AWS_ARCH_SRC}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  COMMENT "Running static analyzer" VERBATIM
+)
+
+add_custom_command(TARGET clang-static POST_BUILD
+  COMMAND echo
+  COMMAND echo "Will fail the build when an error file was found:"
+  COMMAND find . -name "*.html"
+  COMMAND echo
+  COMMAND bash -c "! find . -name '*.html' | grep -q html"
+  COMMAND echo "No error file, static analysis successful"
+  COMMAND echo
+  VERBATIM
+)
